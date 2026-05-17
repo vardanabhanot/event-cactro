@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Event Booking API — Reference</title>
+<style>
+  :root {
+    --bg: #0e0f11;
+    --surface: #161719;
+    --border: #25262a;
+    --text: #e2e4e9;
+    --muted: #6b7280;
+    --get: #3b82f6;
+    --post: #22c55e;
+    --put: #f59e0b;
+    --delete: #ef4444;
+    --get-bg: rgba(59,130,246,.1);
+    --post-bg: rgba(34,197,94,.1);
+    --put-bg: rgba(245,158,11,.1);
+    --delete-bg: rgba(239,68,68,.1);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; font-size: 14px; line-height: 1.6; }
+  a { color: inherit; text-decoration: none; }
+
+  /* Layout */
+  .shell { display: flex; min-height: 100vh; }
+  nav { width: 220px; flex-shrink: 0; border-right: 1px solid var(--border); padding: 32px 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+  main { flex: 1; max-width: 860px; padding: 48px 40px; }
+
+  /* Nav */
+  .nav-logo { padding: 0 20px 28px; }
+  .nav-logo h1 { font-size: 13px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--text); }
+  .nav-logo p { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .nav-section { padding: 0 20px; margin-bottom: 4px; }
+  .nav-section-title { font-size: 10px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; margin-top: 20px; }
+  .nav-item { display: flex; align-items: center; gap: 8px; padding: 5px 0; cursor: pointer; color: var(--muted); transition: color .15s; }
+  .nav-item:hover { color: var(--text); }
+  .nav-item .badge { font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 3px; letter-spacing: .03em; min-width: 36px; text-align: center; }
+  .nav-item span { font-size: 12px; }
+
+  /* Page header */
+  .page-header { margin-bottom: 48px; }
+  .page-header h2 { font-size: 22px; font-weight: 600; margin-bottom: 8px; }
+  .page-header p { color: var(--muted); font-size: 13px; }
+  .base-url { display: inline-flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px; font-family: 'SF Mono', monospace; font-size: 12px; color: var(--muted); margin-top: 14px; }
+  .base-url strong { color: var(--text); }
+
+  /* Section */
+  .section { margin-bottom: 48px; }
+  .section-title { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding-bottom: 10px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+
+  /* Endpoint card */
+  .endpoint { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; overflow: hidden; transition: border-color .15s; }
+  .endpoint:hover { border-color: #3a3b40; }
+  .ep-header { display: flex; align-items: center; gap: 12px; padding: 13px 16px; cursor: pointer; }
+  .method { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; letter-spacing: .04em; min-width: 48px; text-align: center; font-family: 'SF Mono', monospace; }
+  .method.GET    { color: var(--get);    background: var(--get-bg); }
+  .method.POST   { color: var(--post);   background: var(--post-bg); }
+  .method.PUT    { color: var(--put);    background: var(--put-bg); }
+  .method.DELETE { color: var(--delete); background: var(--delete-bg); }
+  .path { font-family: 'SF Mono', monospace; font-size: 12px; color: var(--text); flex: 1; }
+  .path em { color: var(--muted); font-style: normal; }
+  .desc-short { font-size: 12px; color: var(--muted); margin-left: auto; white-space: nowrap; }
+  .ep-body { padding: 0 16px 14px; border-top: 1px solid var(--border); display: none; }
+  .ep-body.open { display: block; }
+  .ep-body p { font-size: 12px; color: var(--muted); margin-top: 12px; }
+  .tags { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+  .tag { font-size: 10px; padding: 2px 8px; border-radius: 3px; background: #1e1f23; border: 1px solid var(--border); color: var(--muted); }
+  .tag.auth { color: #a78bfa; border-color: rgba(167,139,250,.25); background: rgba(167,139,250,.06); }
+  .tag.organizer { color: #f59e0b; border-color: rgba(245,158,11,.25); background: rgba(245,158,11,.06); }
+  .tag.customer  { color: #22c55e; border-color: rgba(34,197,94,.25); background: rgba(34,197,94,.06); }
+  .tag.public    { color: #6b7280; }
+  .body-example { margin-top: 12px; }
+  .body-example p { font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  pre { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; font-family: 'SF Mono', monospace; font-size: 11px; color: #a5b4fc; overflow-x: auto; }
+
+  /* Chevron */
+  .chevron { color: var(--muted); transition: transform .2s; margin-left: 4px; }
+  .chevron.open { transform: rotate(90deg); }
+
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- Sidebar Nav -->
+  <nav>
+    <div class="nav-logo">
+      <h1>Event Booking</h1>
+      <p>API Reference v1.0</p>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-title">Auth</div>
+      <a class="nav-item" href="#auth">
+        <span class="badge method POST">POST</span><span>/auth/register</span>
+      </a>
+      <a class="nav-item" href="#auth">
+        <span class="badge method POST">POST</span><span>/auth/login</span>
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-title">Events</div>
+      <a class="nav-item" href="#events">
+        <span class="badge method GET">GET</span><span>/events</span>
+      </a>
+      <a class="nav-item" href="#events">
+        <span class="badge method GET">GET</span><span>/events/{id}</span>
+      </a>
+      <a class="nav-item" href="#events">
+        <span class="badge method POST">POST</span><span>/events</span>
+      </a>
+      <a class="nav-item" href="#events">
+        <span class="badge method PUT">PUT</span><span>/events/{id}</span>
+      </a>
+      <a class="nav-item" href="#events">
+        <span class="badge method DELETE">DELETE</span><span>/events/{id}</span>
+      </a>
+      <a class="nav-item" href="#events">
+        <span class="badge method GET">GET</span><span>/events/{id}/bookings</span>
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-title">Bookings</div>
+      <a class="nav-item" href="#bookings">
+        <span class="badge method POST">POST</span><span>/events/{id}/book</span>
+      </a>
+      <a class="nav-item" href="#bookings">
+        <span class="badge method GET">GET</span><span>/bookings</span>
+      </a>
+      <a class="nav-item" href="#bookings">
+        <span class="badge method DELETE">DELETE</span><span>/bookings/{id}</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- Main content -->
+  <main>
+    <div class="page-header">
+      <h2>API Reference</h2>
+      <p>Event Booking System — REST API documentation. All protected routes require a JWT Bearer token.</p>
+      <div class="base-url">Base URL &nbsp;<strong>http://localhost:8080/api</strong></div>
+    </div>
+
+    <!-- Auth -->
+    <div class="section" id="auth">
+      <div class="section-title">Authentication</div>
+
+      <div class="endpoint">
+        <div class="ep-header" onclick="toggle(this)">
+          <span class="method POST">POST</span>
+          <span class="path">/auth/register</span>
+          <span class="desc-short">Create an account</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ep-body">
+          <p>Register a new user. The <code>role</code> field must be either <strong>organizer</strong> or <strong>customer</strong>.</p>
+          <div class="tags"><span class="tag public">Public</span></div>
+          <div class="body-example">
+            <p>Request Body</p>
+            <pre>{ "name": "Alice", "email": "alice@example.com", "password": "secret123", "role": "organizer" }</pre>
+          </div>
+          <div class="body-example">
+            <p>Response · 201</p>
+            <pre>{ "id": 1, "name": "Alice", "email": "alice@example.com", "role": "organizer", "created_at": "..." }</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="endpoint">
+        <div class="ep-header" onclick="toggle(this)">
+          <span class="method POST">POST</span>
+          <span class="path">/auth/login</span>
+          <span class="desc-short">Get a JWT token</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ep-body">
+          <p>Authenticate and receive a JWT token valid for 24 hours. Include this token as <code>Authorization: Bearer &lt;token&gt;</code> on all protected routes.</p>
+          <div class="tags"><span class="tag public">Public</span></div>
+          <div class="body-example">
+            <p>Request Body</p>
+            <pre>{ "email": "alice@example.com", "password": "secret123" }</pre>
+          </div>
+          <div class="body-example">
+            <p>Response · 200</p>
+            <pre>{ "token": "eyJhbGci...", "user": { "id": 1, "role": "organizer", ... } }</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Events -->
+    <div class="section" id="events">
+      <div class="section-title">Events</div>
+
+      <div class="endpoint">
+        <div class="ep-header" onclick="toggle(this)">
+          <span class="method GET">GET</span>
+          <span class="path">/events</span>
+          <span class="desc-short">List all events</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ep-body">
+          <p>Returns all events ordered by date ascending.</p>
+          <div class="tags"><span class="tag public">Public</span></div>
+          <div class="body-example">
+            <p>Response · 200</p>
+            <pre>{ "data": [ { "id": 1, "title": "Go Summit", "date": "...", "capacity": 100, ... } ], "total": 1 }</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="endpoint">
+        <div class="ep-header" onclick="toggle(this)">
+          <span class="method GET">GET</span>
+          <span class="path">/events/<em>{id}</em></span>
+          <span class="desc-short">Get event detail</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ep-body">
+          <p>Fetch a single event by its ID.</p>
+          <div class="tags"><span class="tag public">Public</span></div>
+          <div class="body-example">
+            <p>Response · 200</p>
+            <pre>{ "data": { "id": 1, "title": "Go Summit", "location": "Bangalore", "price": 499.99, ... } }</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="endpoint">
+        <div class="ep-header" onclick="toggle(this)">
+          <span class="method POST">POST</span>
+          <span class="path">/events</span>
+          <span class="desc-short">Create a new event</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ep-body">
+          <p>Create an event. Only the authenticated organizer can manage their own events. Date must be in RFC3339 format.</p>
+          <div class="tags"><span class="tag auth">JWT Required</span><span class="tag organizer">Organizer only</span></div>
+          <div class="body-example">
+            <p>Request Body</p>
+            <pre>{ "title": "Go Summit 2026", "description": "All things Go", "location": "Bangalore", "date": "2026-12-01T18:00:00Z", "capacity": 100, "price": 499.99 }</pre>
+          </div>
+          <div class="body-example">
+            <p>Response · 201</p>
+            <pre>{ "data": { "id": 1, "organizer_id": 1, "title": "Go Summit 2026", ... } }</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="endpoint">
+        <div class="ep-header" onclick="toggle(this)">
+          <span class="method PUT">PUT</span>
+          <span class="path">/events/<em>{id}</em></span>
+          <span class="desc-short">Update an event</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ep-body">
+          <p>Update all fields of an event. Must be the organizer who created it. Automatically notifies all customers with confirmed bookings in the background.</p>
+          <div class="tags"><span class="tag auth">JWT Required</span><span class="tag organizer">Organizer only</span></div>
+          <div class="body-example">
+            <p>Request Body</p>
+            <pre>{ "title": "Go Summit 2026 — Updated", "description": "...", "location": "Mumbai", "date": "2026-12-05T18:00:00Z", "capacity": 150, "price": 599.99 }</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="endpoint">
+        <div class="ep-header" onclick="toggle(this)">
+          <span class="method DELETE">DELETE</span>
+          <span class="path">/events/<em>{id}</em></span>
+          <span class="desc-short">Delete an event</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ep-body">
+          <p>Permanently deletes an event. Must be the owning organizer.</p>
+          <div class="tags"><span class="tag auth">JWT Required</span><span class="tag organizer">Organizer only</span></div>
+          <div class="body-example">
+            <p>Response · 200</p>
+            <pre>{ "message": "event deleted" }</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="endpoint">
+        <div class="ep-header" onclick="toggle(this)">
+          <span class="method GET">GET</span>
+          <span class="path">/events/<em>{id}</em>/bookings</span>
+          <span class="desc-short">List event's bookings</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ep-body">
+          <p>Returns all confirmed bookings for an event, including customer name and email. Must be the owning organizer.</p>
+          <div class="tags"><span class="tag auth">JWT Required</span><span class="tag organizer">Organizer only</span></div>
+          <div class="body-example">
+            <p>Response · 200</p>
+            <pre>{ "data": [ { "id": 1, "customer_name": "Bob", "customer_email": "bob@example.com", "tickets": 2, ... } ], "total": 1 }</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bookings -->
+    <div class="section" id="bookings">
+      <div class="section-title">Bookings</div>
+
+      <div class="endpoint">
+        <div class="ep-header" onclick="toggle(this)">
+          <span class="method POST">POST</span>
+          <span class="path">/events/<em>{id}</em>/book</span>
+          <span class="desc-short">Book tickets</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ep-body">
+          <p>Book one or more tickets for an event. The booking is rejected if remaining capacity is insufficient. A confirmation is logged in the background on success.</p>
+          <div class="tags"><span class="tag auth">JWT Required</span><span class="tag customer">Customer only</span></div>
+          <div class="body-example">
+            <p>Request Body</p>
+            <pre>{ "tickets": 2 }</pre>
+          </div>
+          <div class="body-example">
+            <p>Response · 201</p>
+            <pre>{ "data": { "id": 1, "event_id": 1, "tickets": 2, "status": "confirmed", ... } }</pre>
+          </div>
+          <div class="body-example">
+            <p>Response · 409 (capacity exceeded)</p>
+            <pre>{ "error": { "message": "not enough capacity", "requested": 10, "remaining": 3 } }</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="endpoint">
+        <div class="ep-header" onclick="toggle(this)">
+          <span class="method GET">GET</span>
+          <span class="path">/bookings</span>
+          <span class="desc-short">My bookings</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ep-body">
+          <p>Returns all bookings made by the authenticated customer, with event title and date.</p>
+          <div class="tags"><span class="tag auth">JWT Required</span><span class="tag customer">Customer only</span></div>
+          <div class="body-example">
+            <p>Response · 200</p>
+            <pre>{ "data": [ { "id": 1, "event_title": "Go Summit", "event_date": "...", "tickets": 2, "status": "confirmed" } ], "total": 1 }</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="endpoint">
+        <div class="ep-header" onclick="toggle(this)">
+          <span class="method DELETE">DELETE</span>
+          <span class="path">/bookings/<em>{id}</em></span>
+          <span class="desc-short">Cancel a booking</span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="ep-body">
+          <p>Cancels a booking by setting its status to <code>cancelled</code>. Must be the customer who made the booking.</p>
+          <div class="tags"><span class="tag auth">JWT Required</span><span class="tag customer">Customer only</span></div>
+          <div class="body-example">
+            <p>Response · 200</p>
+            <pre>{ "message": "booking cancelled" }</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  function toggle(header) {
+    const body = header.nextElementSibling;
+    const chevron = header.querySelector('.chevron');
+    const isOpen = body.classList.contains('open');
+    body.classList.toggle('open', !isOpen);
+    chevron.classList.toggle('open', !isOpen);
+  }
+</script>
+</body>
+</html>
