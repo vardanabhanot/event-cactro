@@ -22,7 +22,7 @@ func Load() {
 
 	App = &Config{
 		Port:      getEnv("PORT", "8080"),
-		JWTSecret: getEnv("JWT_SECRET", "changeme"),
+		JWTSecret: getEnv("JWT_SECRET", "hola-12345678"),
 		DBPath:    getEnv("DB_PATH", "./eventbooking.db"),
 	}
 }
